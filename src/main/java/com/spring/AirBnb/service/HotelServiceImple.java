@@ -5,6 +5,8 @@ import com.spring.AirBnb.entity.Hotel;
 import com.spring.AirBnb.entity.Room;
 import com.spring.AirBnb.exception.ResourceNotFoundException;
 import com.spring.AirBnb.repository.HotelRepository;
+import com.spring.AirBnb.repository.RoomRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -21,6 +23,8 @@ public class HotelServiceImple implements HotelService{
     private final ModelMapper modelMapper;
 
     private final InventoryService inventoryService;
+
+    private final RoomRepository roomRepository;
 
     @Override
     public HotelDto createNewHotel(HotelDto hotelDto) {
@@ -53,18 +57,21 @@ public class HotelServiceImple implements HotelService{
     }
 
     @Override
+    @Transactional
     public void deleteHotelById(Long id) {
         Hotel hotel = hotelRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: "+id));
 
-        hotelRepository.deleteById(id);
         for(Room room: hotel.getRooms()) {
             inventoryService.deleteFutureInventories(room);
+            roomRepository.deleteById(room.getId());
         }
+        hotelRepository.deleteById(id);
     }
 
     @Override
+    @Transactional
     public void activateHotel(Long id) {
         log.info("Activating the hotel with ID: {}", id);
         Hotel hotel = hotelRepository
