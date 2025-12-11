@@ -2,6 +2,7 @@ package com.spring.AirBnb.controller;
 
 
 import com.spring.AirBnb.dto.HotelDto;
+import com.spring.AirBnb.dto.HotelMinPriceDto;
 import com.spring.AirBnb.dto.HotelSearchDto;
 import com.spring.AirBnb.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +21,9 @@ public class HotelSearchController {
     private final InventoryService inventoryService;
 
     @GetMapping("/search")
-    public ResponseEntity<Page<HotelDto>> searchHotels(@RequestBody HotelSearchDto hotelSearchDto) {
+    public ResponseEntity<Page<HotelMinPriceDto>> searchHotels(@RequestBody HotelSearchDto hotelSearchDto) {
 
-        Page<HotelDto> page = inventoryService.searchHotel(hotelSearchDto);
+        Page<HotelMinPriceDto> page = inventoryService.searchHotel(hotelSearchDto);
         return ResponseEntity.ok(page);
     }
 }
