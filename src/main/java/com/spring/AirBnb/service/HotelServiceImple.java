@@ -3,6 +3,7 @@ package com.spring.AirBnb.service;
 import com.spring.AirBnb.dto.HotelDto;
 import com.spring.AirBnb.entity.Hotel;
 import com.spring.AirBnb.entity.Room;
+import com.spring.AirBnb.entity.User;
 import com.spring.AirBnb.exception.ResourceNotFoundException;
 import com.spring.AirBnb.repository.HotelRepository;
 import com.spring.AirBnb.repository.RoomRepository;
@@ -10,6 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 
@@ -31,6 +33,8 @@ public class HotelServiceImple implements HotelService{
         log.info("Creating a new hotel with name: {}", hotelDto.getName());
         Hotel hotel = modelMapper.map(hotelDto,Hotel.class);
         hotel.setActive(false);
+        User user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        hotel.setOwner(user);
         hotel=hotelRepository.save(hotel);
         log.info("Created a new hotel with ID: {}", hotelDto.getId());
         return modelMapper.map(hotel,HotelDto.class);
