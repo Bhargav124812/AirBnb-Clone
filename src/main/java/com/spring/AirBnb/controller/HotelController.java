@@ -1,6 +1,9 @@
 package com.spring.AirBnb.controller;
 
+import com.spring.AirBnb.dto.BookingDto;
 import com.spring.AirBnb.dto.HotelDto;
+import com.spring.AirBnb.dto.HotelReportDto;
+import com.spring.AirBnb.service.BookingService;
 import com.spring.AirBnb.service.HotelService;
 import com.spring.AirBnb.service.HotelServiceImple;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/hotels")
 @Slf4j
@@ -16,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 public class HotelController {
 
     private final HotelService hotelService;
+
+    private final BookingService bookingService;
 
     @PostMapping
     public ResponseEntity<HotelDto> createNewHotel(@RequestBody HotelDto hotelDto){
@@ -47,4 +55,25 @@ public class HotelController {
         hotelService.activateHotel(hotelId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping
+    public ResponseEntity<List<HotelDto>> getAllHotel(){
+        return ResponseEntity.ok(hotelService.getAllHotels());
+    }
+
+    @GetMapping("/{hotelId}/bookings")
+    public ResponseEntity<List<BookingDto>> getAllBookingByHotelId(@PathVariable Long hotelId){
+        return  ResponseEntity.ok(hotelService.getAllBookingByHotelId(hotelId));
+    }
+
+    @GetMapping("/{hotelId}/report")
+    public ResponseEntity<HotelReportDto> getHotelReport(@PathVariable Long hotelId,
+                                                         @RequestParam(required = false) LocalDate startDate,
+                                                         @RequestParam(required = false) LocalDate endDate){
+        if(startDate==null) startDate =LocalDate.now().minusMonths(1);
+        if(endDate ==null) endDate = LocalDate.now();
+
+        return ResponseEntity.ok(bookingService.getHotelReport(hotelId, startDate, endDate));
+    }
+
 }

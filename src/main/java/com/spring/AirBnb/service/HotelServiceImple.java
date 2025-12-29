@@ -1,18 +1,27 @@
 package com.spring.AirBnb.service;
 
+import com.spring.AirBnb.dto.BookingDto;
 import com.spring.AirBnb.dto.HotelDto;
+import com.spring.AirBnb.entity.Booking;
 import com.spring.AirBnb.entity.Hotel;
 import com.spring.AirBnb.entity.Room;
 import com.spring.AirBnb.entity.User;
 import com.spring.AirBnb.exception.ResourceNotFoundException;
+import com.spring.AirBnb.repository.BookingRepository;
 import com.spring.AirBnb.repository.HotelRepository;
 import com.spring.AirBnb.repository.RoomRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.spring.AirBnb.util.AppUtils.getCurrentUser;
 
 
 @Service
@@ -27,6 +36,8 @@ public class HotelServiceImple implements HotelService{
     private final InventoryService inventoryService;
 
     private final RoomRepository roomRepository;
+
+    private final BookingRepository bookingRepository;
 
     @Override
     public HotelDto createNewHotel(HotelDto hotelDto) {
@@ -87,5 +98,33 @@ public class HotelServiceImple implements HotelService{
         for(Room room: hotel.getRooms()) {
             inventoryService.initializeRoomForAYear(room);
         }
+    }
+
+    @Override
+    public List<HotelDto> getAllHotels() {
+        log.info("Getting All Hotels OF the USer");
+        User user= getCurrentUser();
+        List<Hotel>hotels=hotelRepository.findByOwner(user);
+        return hotels.stream().map((element) -> modelMapper.map(element,HotelDto.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BookingDto> getAllBookingByHotelId(Long hotelId) {
+        log.info("Getting the Booking For The ID {}",hotelId);
+        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(() -> new ResourceNotFoundException("Hotel not " +
+                "found with ID: "+hotelId));
+        User user = getCurrentUser();
+
+        log.info("Getting all booking for the hotel with ID: {}", hotelId);
+
+        if(!user.equals(hotel.getOwner())) throw new AccessDeniedException("You are not the owner of hotel with id: "+hotelId);
+
+        List<Booking> bookings = bookingRepository.findByHotel(hotel);
+
+        return bookings.stream()
+                .map((element) -> modelMapper.map(element, BookingDto.class))
+                .collect(Collectors.toList());
+
     }
 }

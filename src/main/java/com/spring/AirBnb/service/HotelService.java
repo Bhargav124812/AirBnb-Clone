@@ -1,6 +1,10 @@
 package com.spring.AirBnb.service;
 
+import com.spring.AirBnb.dto.BookingDto;
 import com.spring.AirBnb.dto.HotelDto;
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
 
 public interface HotelService {
 
@@ -14,5 +18,8 @@ public interface HotelService {
 
   void activateHotel(Long id);
 
+    List<HotelDto> getAllHotels();
+
+    List<BookingDto> getAllBookingByHotelId(Long hotelId);
 }
 

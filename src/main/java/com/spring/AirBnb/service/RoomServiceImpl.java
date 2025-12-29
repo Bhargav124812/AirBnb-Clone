@@ -3,7 +3,9 @@ package com.spring.AirBnb.service;
 import com.spring.AirBnb.dto.RoomDto;
 import com.spring.AirBnb.entity.Hotel;
 import com.spring.AirBnb.entity.Room;
+import com.spring.AirBnb.entity.User;
 import com.spring.AirBnb.exception.ResourceNotFoundException;
+import com.spring.AirBnb.exception.UnAuthorisedException;
 import com.spring.AirBnb.repository.HotelRepository;
 import com.spring.AirBnb.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.spring.AirBnb.util.AppUtils.getCurrentUser;
 
 
 @Service
@@ -77,5 +81,28 @@ public class RoomServiceImpl implements RoomService{
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found with ID: "+id));
         inventoryService.deleteFutureInventories(room);
         roomRepository.deleteById(id);
+    }
+
+    @Override
+    public RoomDto updateRoomById(Long hotelId, Long roomId, RoomDto roomDto) {
+        log.info("Updating the room with ID: {}", roomId);
+        Hotel hotel = hotelRepository
+                .findById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: "+hotelId));
+
+        User user = getCurrentUser();
+        if(!user.equals(hotel.getOwner())) {
+            throw new UnAuthorisedException("This user does not own this hotel with id: "+hotelId);
+        }
+
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found with ID: "+roomId));
+
+        modelMapper.map(roomDto, room);
+        room.setId(roomId);
+
+        room = roomRepository.save(room);
+
+        return modelMapper.map(room, RoomDto.class);
     }
 }
